@@ -53,20 +53,36 @@ fn part_two(depths: &Vec<i32>) -> u32 {
     increases
 }
 
-fn main() {
+fn load_input() -> Vec<i32> {
     let input = include_str!("day1.txt");
 
-    let depths: Vec<_> = input
+    input
         .lines()
         .filter(|line| line.len() > 0)
         .map(|line| line.parse::<i32>().unwrap())
-        .collect();
+        .collect()
+}
+
+fn main() {
+    let depths = load_input();
 
     let part_one_ans = part_one(&depths);
     let part_two_ans = part_two(&depths);
     println!("PART 1: {} increases", part_one_ans);
     println!("PART 2: {} increases", part_two_ans);
+}
 
-    assert_eq!(part_one_ans, 1451);
-    assert_eq!(part_two_ans, 1395);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_one() {
+        assert_eq!(part_one(&load_input()), 1451);
+    }
+
+    #[test]
+    fn test_part_two() {
+        assert_eq!(part_two(&load_input()), 1395);
+    }
 }

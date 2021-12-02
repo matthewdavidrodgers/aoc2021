@@ -39,10 +39,10 @@ fn part_two(depths: &Vec<Mvmt>) -> i32 {
     hor * ver
 }
 
-fn main() {
+fn load_input() -> Vec<Mvmt> {
     let input = include_str!("day2.txt");
 
-    let depths: Vec<_> = input
+    input
         .lines()
         .filter(|line| line.len() > 0)
         .map(|line| {
@@ -56,13 +56,29 @@ fn main() {
                 _ => panic!("invalid movement {}", dir),
             }
         })
-        .collect();
+        .collect()
+}
+
+fn main() {
+    let depths: Vec<_> = load_input();
 
     let part_one_ans = part_one(&depths);
     let part_two_ans = part_two(&depths);
     println!("PART ONE ANSWER: {}", part_one_ans);
     println!("PART TWO ANSWER: {}", part_two_ans);
+}
 
-    assert_eq!(part_one_ans, 2120749);
-    assert_eq!(part_two_ans, 2138382217);
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn test_part_one() {
+        assert_eq!(part_one(&load_input()), 2120749);
+    }
+
+    #[test]
+    fn test_part_two() {
+        assert_eq!(part_two(&load_input()), 2138382217);
+    }
 }
