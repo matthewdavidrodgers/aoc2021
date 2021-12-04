@@ -52,7 +52,8 @@ fn partition_until(report: &Vec<u16>, pick_partition: PickPartition) -> u32 {
 
         let greater;
         let lesser;
-        if ones.len() >= curr_report.len() / 2 {
+
+        if ones.len() >= zeroes.len() {
             greater = ones;
             lesser = zeroes;
         } else {
@@ -66,11 +67,11 @@ fn partition_until(report: &Vec<u16>, pick_partition: PickPartition) -> u32 {
             lesser
         };
 
-        if curr_position == 0 {
-            curr_position = 11;
+        curr_position = if curr_position == 0 {
+            11
         } else {
-            curr_position -= 1;
-        }
+            curr_position - 1
+        };
     }
 
     curr_report[0] as u32 // will panic if nothing is found, that's what i want
@@ -110,5 +111,10 @@ mod tests {
     #[test]
     fn test_part_one() {
         assert_eq!(part_one(&load_input), 2967914);
+    }
+
+    #[test]
+    fn test_part_two() {
+        assert_eq!(part_two(&load_input), 7041258);
     }
 }
