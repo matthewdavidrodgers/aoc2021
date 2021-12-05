@@ -104,17 +104,17 @@ fn main() {
     println!("PART TWO ANSWER: {}", part_two_ans);
 }
 
-#[cfg(tests)]
+#[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_part_one() {
-        assert_eq!(part_one(&load_input), 2967914);
+        assert_eq!(part_one(&load_input()), 2967914);
     }
 
     #[test]
     fn test_part_two() {
-        assert_eq!(part_two(&load_input), 7041258);
+        assert_eq!(part_two(&load_input()), 7041258);
     }
 }
