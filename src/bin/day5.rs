@@ -1,3 +1,4 @@
+use std::cmp::Ordering;
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Hash)]
@@ -33,6 +34,15 @@ impl Point {
 enum Slope {
     Positive,
     Negative,
+}
+
+impl Slope {
+    fn to_scalar(&self) -> i32 {
+        match self {
+            Slope::Positive => 1,
+            Slope::Negative => -1,
+        }
+    }
 }
 
 #[derive(Debug)]
@@ -151,65 +161,90 @@ impl Line {
                     point = next_point;
                 }
             }
-            LineType::Diagonal { m: _, b: _ } => unimplemented!(),
+            LineType::Diagonal { m, .. } => {
+                let mut point = if smaller_start.x <= bigger_start.x {
+                    bigger_start.clone()
+                } else {
+                    smaller_start.clone()
+                };
+
+                while point.is_on(a) && point.is_on(b) {
+                    let next_point = Point {
+                        x: point.x + 1,
+                        y: point.y + m.to_scalar(),
+                    };
+                    intersections.push(point);
+                    point = next_point;
+                }
+            }
         };
 
         intersections
-    }
-
-    fn intersections_diff_line(a: &Line, b: &Line) -> Option<Point> {
-        let (hor_start, _) = if matches!(a.line_type, LineType::Horizontal { y: _ }) {
-            a.ordered_points()
-        } else {
-            b.ordered_points()
-        };
-
-        let (ver_start, _) = if matches!(a.line_type, LineType::Vertical { x: _ }) {
-            a.ordered_points()
-        } else {
-            b.ordered_points()
-        };
-
-        let intersection = Point {
-            x: ver_start.x,
-            y: hor_start.y,
-        };
-        if intersection.is_on(a) && intersection.is_on(b) {
-            Some(intersection)
-        } else {
-            None
-        }
     }
 
     fn intersections(&self, other: &Line) -> Vec<Point> {
         use LineType::*;
 
         match (&self.line_type, &other.line_type) {
-            (Vertical { x: x_a }, Vertical { x: x_b }) => {
-                if *x_a == *x_b {
+            (Vertical { x: a_val }, Vertical { x: b_val })
+            | (Horizontal { y: a_val }, Horizontal { y: b_val }) => {
+                if *a_val == *b_val {
                     Line::intersections_same_line(self, other, &self.line_type)
                 } else {
                     vec![]
                 }
             }
-            (Horizontal { y: y_a }, Horizontal { y: y_b }) => {
-                if *y_a == *y_b {
-                    Line::intersections_same_line(self, other, &self.line_type)
-                } else {
-                    vec![]
+            (Diagonal { m: m_a, b: b_a }, Diagonal { m: m_b, b: b_b }) => match (m_a, m_b) {
+                (Slope::Positive, Slope::Positive) | (Slope::Negative, Slope::Negative) => {
+                    match b_a.cmp(&b_b) {
+                        Ordering::Equal => {
+                            Line::intersections_same_line(self, other, &self.line_type)
+                        }
+                        _ => vec![],
+                    }
                 }
-            }
-            (Horizontal { y: _ }, Vertical { x: _ }) | (Vertical { x: _ }, Horizontal { y: _ }) => {
-                if let Some(intersection) = Line::intersections_diff_line(self, other) {
+                _ => {
+                    let x = (*b_b - *b_a) / (m_a.to_scalar() - m_b.to_scalar());
+                    let intersection = Point {
+                        x,
+                        y: (m_a.to_scalar() * x) + b_a,
+                    };
+                    if intersection.is_on(self) && intersection.is_on(other) {
+                        vec![intersection]
+                    } else {
+                        vec![]
+                    }
+                }
+            },
+            (Horizontal { y }, Vertical { x }) | (Vertical { x }, Horizontal { y }) => {
+                let intersection = Point { x: *x, y: *y };
+                if intersection.is_on(self) && intersection.is_on(other) {
                     vec![intersection]
                 } else {
                     vec![]
                 }
             }
-            _ => {
-                println!("{:?}", self);
-                println!("{:?}", other);
-                unimplemented!();
+            (Diagonal { m, b }, Horizontal { y }) | (Horizontal { y }, Diagonal { m, b }) => {
+                let intersection = Point {
+                    x: (*y - *b) / m.to_scalar(),
+                    y: *y,
+                };
+                if intersection.is_on(self) && intersection.is_on(other) {
+                    vec![intersection]
+                } else {
+                    vec![]
+                }
+            }
+            (Diagonal { m, b }, Vertical { x }) | (Vertical { x }, Diagonal { m, b }) => {
+                let intersection = Point {
+                    x: *x,
+                    y: (m.to_scalar() * *x) + *b,
+                };
+                if intersection.is_on(self) && intersection.is_on(other) {
+                    vec![intersection]
+                } else {
+                    vec![]
+                }
             }
         }
     }
@@ -241,9 +276,23 @@ fn part_one(lines: &Vec<Line>) -> u32 {
     intersections.len() as u32
 }
 
-// fn part_two(lines: &Vec<Line>) -> u32 {
-//
-// }
+fn part_two(lines: &Vec<Line>) -> u32 {
+    let mut intersections: HashMap<Point, u32> = HashMap::new();
+
+    for i in 0..lines.len() {
+        let line = &lines[i];
+        for j in (i + 1)..lines.len() {
+            let other_line = &lines[j];
+
+            for intersection in line.intersections(&other_line) {
+                let intersection_record = intersections.entry(intersection).or_insert(0);
+                *intersection_record += 1;
+            }
+        }
+    }
+
+    intersections.len() as u32
+}
 
 fn load_input() -> Vec<Line> {
     let input = include_str!("day5.txt");
@@ -276,10 +325,10 @@ fn main() {
     let input = load_input();
 
     let part_one_answer = part_one(&input);
-    // let part_two_answer = part_two(&input);
+    let part_two_answer = part_two(&input);
 
     println!("PART ONE ANSWER {}", part_one_answer);
-    // println!("PART TWO ANSWER {}", part_two_answer);
+    println!("PART TWO ANSWER {}", part_two_answer);
 }
 
 #[cfg(test)]
@@ -302,6 +351,24 @@ mod tests {
         ];
 
         assert_eq!(part_one(&lines), 5);
+    }
+
+    #[test]
+    fn test_part_two_sample() {
+        let lines = vec![
+            Line::new(Point { x: 0, y: 9 }, Point { x: 5, y: 9 }),
+            Line::new(Point { x: 8, y: 0 }, Point { x: 0, y: 8 }),
+            Line::new(Point { x: 9, y: 4 }, Point { x: 3, y: 4 }),
+            Line::new(Point { x: 2, y: 2 }, Point { x: 2, y: 1 }),
+            Line::new(Point { x: 7, y: 0 }, Point { x: 7, y: 4 }),
+            Line::new(Point { x: 6, y: 4 }, Point { x: 2, y: 0 }),
+            Line::new(Point { x: 0, y: 9 }, Point { x: 2, y: 9 }),
+            Line::new(Point { x: 3, y: 4 }, Point { x: 1, y: 4 }),
+            Line::new(Point { x: 0, y: 0 }, Point { x: 8, y: 8 }),
+            Line::new(Point { x: 5, y: 5 }, Point { x: 8, y: 2 }),
+        ];
+
+        assert_eq!(part_two(&lines), 12);
     }
 
     #[test]
