@@ -30,7 +30,7 @@ fn part_two(depths: &Vec<Mvmt>) -> i32 {
             Mvmt::Forward(amt) => {
                 hor += amt;
                 ver += aim * amt;
-            },
+            }
             Mvmt::Up(amt) => aim -= amt,
             Mvmt::Down(amt) => aim += amt,
         }
