@@ -23,7 +23,7 @@ fn part_one(mut fish: Vec<LFish>, days: u32) -> u32 {
 
         fish.append(&mut next_fish);
     }
-    
+
     fish.len() as u32
 }
 
@@ -33,8 +33,7 @@ fn load_input() -> Vec<LFish> {
     input
         .lines()
         .flat_map(|line| {
-            line
-                .split(',')
+            line.split(',')
                 .filter(|fish_str| fish_str.len() > 0)
                 .map(|fish_str| {
                     let timer: u32 = fish_str.parse().unwrap();
