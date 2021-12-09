@@ -6,11 +6,15 @@ fn part_one(positions: &Vec<i32>) -> i32 {
 
     for i in *min_best..*max_best {
         let mut movements = 0;
-        positions.iter().for_each(|pos| {
-            movements += if i > *pos { i - *pos } else { *pos - i }
-        });
+        positions
+            .iter()
+            .for_each(|pos| movements += if i > *pos { i - *pos } else { *pos - i });
         if let Some(best) = best_movements {
-            best_movements = if movements < best { Some(movements) } else { Some(best) };
+            best_movements = if movements < best {
+                Some(movements)
+            } else {
+                Some(best)
+            };
         } else {
             best_movements = Some(movements);
         }
@@ -32,10 +36,18 @@ fn part_two(positions: &Vec<i32>) -> i32 {
     for i in *min_best..*max_best {
         let mut movements = 0;
         positions.iter().for_each(|pos| {
-            movements += if i > *pos { triangular_number(i - *pos) } else { triangular_number(*pos - i) }
+            movements += if i > *pos {
+                triangular_number(i - *pos)
+            } else {
+                triangular_number(*pos - i)
+            }
         });
         if let Some(best) = best_movements {
-            best_movements = if movements < best { Some(movements) } else { Some(best) };
+            best_movements = if movements < best {
+                Some(movements)
+            } else {
+                Some(best)
+            };
         } else {
             best_movements = Some(movements);
         }
@@ -51,8 +63,7 @@ fn load_input() -> Vec<i32> {
         .lines()
         .filter(|line| line.len() > 0)
         .flat_map(|line| {
-            line
-                .split(',')
+            line.split(',')
                 .map(|num| num.parse::<i32>().unwrap())
                 .collect::<Vec<_>>()
         })
@@ -75,6 +86,6 @@ mod tests {
 
     #[test]
     fn test_part_one_sample() {
-        assert_eq!(part_one(&vec![16,1,2,0,4,2,7,1,2,14]), 37);
+        assert_eq!(part_one(&vec![16, 1, 2, 0, 4, 2, 7, 1, 2, 14]), 37);
     }
 }
