@@ -1,5 +1,6 @@
 use std::collections::HashMap;
 
+#[derive(Debug, Copy, Clone, PartialEq, Eq)]
 enum Segment {
     A,
     B,
@@ -10,24 +11,9 @@ enum Segment {
     G,
 }
 
-struct DisplayDigit {
-    number: u32,
-    segments: Vec<Segment>,
-}
-
-#[derive(Debug)]
-enum Segment {
-    A,
-    B,
-    C,
-    D,
-    E,
-    F,
-    G,
-}
-
-#[derive(Debug)]
+#[derive(Debug, Clone, PartialEq, Eq)]
 struct DigitRender {
+    segment_str: String,
     segments: Vec<Segment>,
 }
 
@@ -58,8 +44,16 @@ fn load_input(input: &str) -> Vec<Entry> {
                 .next()
                 .unwrap()
                 .split_whitespace()
-                .map(|sig| DigitRender {
-                    segments: sig.chars().map(match_char).collect::<Vec<_>>(),
+                .map(|sig| {
+                    let mut chars: Vec<_> = sig.chars().collect();
+                    chars.sort_by(|a, b| a.cmp(b));
+
+                    let segment_str = String::from_iter(chars.iter());
+
+                    DigitRender {
+                        segment_str,
+                        segments: chars.into_iter().map(match_char).collect::<Vec<_>>(),
+                    }
                 })
                 .collect::<Vec<_>>();
 
@@ -67,8 +61,16 @@ fn load_input(input: &str) -> Vec<Entry> {
                 .next()
                 .unwrap()
                 .split_whitespace()
-                .map(|val| DigitRender {
-                    segments: val.chars().map(match_char).collect::<Vec<_>>(),
+                .map(|val| {
+                    let mut chars: Vec<_> = val.chars().collect();
+                    chars.sort_by(|a, b| a.cmp(b));
+
+                    let segment_str = String::from_iter(chars.iter());
+
+                    DigitRender {
+                        segment_str,
+                        segments: chars.into_iter().map(match_char).collect::<Vec<_>>(),
+                    }
                 })
                 .collect::<Vec<_>>();
 
@@ -78,25 +80,6 @@ fn load_input(input: &str) -> Vec<Entry> {
             }
         })
         .collect()
-}
-
-fn load_display() -> HashMap<u32, Vec<Segment>> {
-    use Segment::*;
-
-    let display_map = HashMap::new();
-
-    display_map.insert(0, vec![A, B, C, E, F, G]);
-    display_map.insert(1, vec![C, F]);
-    display_map.insert(2, vec![A, C, D, E, G]);
-    display_map.insert(3, vec![A, C, D, F, G]);
-    display_map.insert(4, vec![B, C, D, F]);
-    display_map.insert(5, vec![A, B, D, F, G]);
-    display_map.insert(6, vec![A, B, D, E, F, G]);
-    display_map.insert(7, vec![A, C, F]);
-    display_map.insert(8, vec![A, B, C, D, E, F, G]);
-    display_map.insert(9, vec![A, B, C, D, F, G]);
-
-    display_map
 }
 
 fn part_one(entries: &Vec<Entry>) -> u32 {
@@ -110,74 +93,126 @@ fn part_one(entries: &Vec<Entry>) -> u32 {
         .count() as u32
 }
 
-struct DecodingSignal<'a> {
-    number: Option<u32>,
-    sig_segments: &'a Vec<Segment>,
-}
+fn build_sig_map(entry: &Entry) -> HashMap<String, u32> {
+    let mut sig_map = HashMap::new();
 
-fn build_sig_to_disp_map(entry: &Entry, display: &HashMap<u32, Vec<Segment>>) -> HashMap<Segment, Segment> {
-    let mut signals: Vec<_> = entry.sig_patterns.iter().map(|seg| {
-        DecodingSignal { number: None, sig_segments: &seg }
-    }).collect();
-
-    let mut decode_map = HashMap::new();   
-
-    let all_displays = vec![
-        Segment::A,
-        Segment::B,
-        Segment::C,
-        Segment::D,
-        Segment::E,
-        Segment::F,
-        Segment::G,
-    ];
-
-    decode_map.insert(Segment::A, all_displays.clone());
-    decode_map.insert(Segment::B, all_displays.clone());
-    decode_map.insert(Segment::C, all_displays.clone());
-    decode_map.insert(Segment::D, all_displays.clone());
-    decode_map.insert(Segment::E, all_displays.clone());
-    decode_map.insert(Segment::F, all_displays.clone());
-    decode_map.insert(Segment::G, all_displays.clone());
-
-    for signal in &mut signals {
+    let mut sig_seven = None;
+    for signal in &entry.sig_patterns {
         match signal.segments.len() {
-            2 => signal.number = Some(1),
-            3 => signal.number = Some(7),
-            4 => signal.number = Some(4),
-            7 => signal.number = some(8),
-        }
-    }
-
-    for signal in &mut signals {
-        if let Some(num) = signal.number {
-            let display_segments = display.get(num).unwrap();
-            let mark_segments = all_displays
-                .iter()
-                .filter(|s| !display_segments.contains(s))
-                .collect::<Vec<_>>();
-            signal.segments = signal.segments.iter().filter(|seg| {
-                !mark_segments.contains(seg)
-            });
-            for (sig, signals) in display {
-                
+            2 => {
+                sig_map.insert(signal.segment_str.clone(), 1);
             }
+            3 => {
+                sig_seven = Some(signal);
+                sig_map.insert(signal.segment_str.clone(), 7);
+            }
+            4 => {
+                sig_map.insert(signal.segment_str.clone(), 4);
+            }
+            7 => {
+                sig_map.insert(signal.segment_str.clone(), 8);
+            }
+            _ => (),
         }
     }
+    let mut signals = entry.sig_patterns.clone();
+
+    let sig_seven = sig_seven.unwrap();
+    signals.retain(|sig| !sig_map.contains_key(&sig.segment_str));
+
+    let i = signals
+        .iter()
+        .position(|sig| {
+            sig.segments.len() == 6
+                && sig_seven
+                    .segments
+                    .iter()
+                    .any(|sig_seg| !sig.segments.contains(sig_seg))
+        })
+        .unwrap();
+    let sig_six = signals.swap_remove(i);
+    sig_map.insert(sig_six.segment_str.clone(), 6);
+
+    let i = signals
+        .iter()
+        .position(|sig| {
+            sig.segments.len() == 5
+                && sig
+                    .segments
+                    .iter()
+                    .all(|sig_seg| sig_six.segments.contains(sig_seg))
+        })
+        .unwrap();
+    let sig_five = signals.swap_remove(i);
+    sig_map.insert(sig_five.segment_str.clone(), 5);
+
+    let i = signals
+        .iter()
+        .position(|sig| {
+            sig.segments.len() == 6
+                && sig_five
+                    .segments
+                    .iter()
+                    .all(|sig_seg| sig.segments.contains(sig_seg))
+        })
+        .unwrap();
+    let sig_nine = signals.swap_remove(i);
+    sig_map.insert(sig_nine.segment_str.clone(), 9);
+
+    let i = signals
+        .iter()
+        .position(|sig| {
+            sig.segments.len() == 5
+                && sig_seven
+                    .segments
+                    .iter()
+                    .all(|sig_seg| sig.segments.contains(sig_seg))
+        })
+        .unwrap();
+    let sig_three = signals.swap_remove(i);
+    sig_map.insert(sig_three.segment_str.clone(), 3);
+
+    let i = signals
+        .iter()
+        .position(|sig| sig.segments.len() == 5)
+        .unwrap();
+    let sig_two = signals.swap_remove(i);
+    sig_map.insert(sig_two.segment_str.clone(), 2);
+
+    let sig_zero = signals.swap_remove(0);
+    sig_map.insert(sig_zero.segment_str.clone(), 0);
+
+    sig_map
 }
 
 fn part_two(entries: &Vec<Entry>) -> u32 {
-    let display_digits = load_display();
-    
-    0
+    let mut sum = 0;
+
+    for entry in entries {
+        let map = build_sig_map(entry);
+        let mut entry_sum = 0;
+        for (i, output_val) in entry.output_vals.iter().enumerate() {
+            if let Some(num) = map.get(&output_val.segment_str) {
+                let pow = entry.output_vals.len() - i - 1;
+                entry_sum += num * 10u32.pow(pow as u32);
+            } else {
+                panic!("Could not resolve number");
+            }
+        }
+        sum += entry_sum;
+    }
+
+    sum
 }
 
 fn main() {
     let input = load_input(include_str!("day8.txt"));
 
     let part_one_answer = part_one(&input);
+    let part_two_answer = part_two(&input);
 
     println!("PART ONE ANSWER: {}", part_one_answer);
+    println!("PART TWO ANSWER: {}", part_two_answer);
 }
 
 #[cfg(test)]
@@ -208,46 +243,51 @@ gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce
         let input = load_input(include_str!("day8.txt"));
         assert_eq!(part_one(&input), 387);
     }
+
+    #[test]
+    fn test_build_sig_map() {
+        let input =
+            "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf";
+        let input = load_input(input);
+
+        let map = build_sig_map(&input[0]);
+        assert_eq!(map.get("abcdefg"), Some(&8));
+        assert_eq!(map.get("bcdef"), Some(&5));
+        assert_eq!(map.get("acdfg"), Some(&2));
+        assert_eq!(map.get("abcdf"), Some(&3));
+        assert_eq!(map.get("abd"), Some(&7));
+        assert_eq!(map.get("abcdef"), Some(&9));
+        assert_eq!(map.get("bcdefg"), Some(&6));
+        assert_eq!(map.get("abef"), Some(&4));
+        assert_eq!(map.get("abcdeg"), Some(&0));
+        assert_eq!(map.get("ab"), Some(&1));
+    }
+
+    #[test]
+    fn test_part_two_single_sample() {
+        let input =
+            "acedgfb cdfbe gcdfa fbcad dab cefabd cdfgeb eafb cagedb ab | cdfeb fcadb cdfeb cdbaf";
+        let input = load_input(input);
+
+        assert_eq!(part_two(&input), 5353);
+    }
+
+    #[test]
+    fn test_part_two_sample() {
+        let input = "
+be cfbegad cbdgef fgaecd cgeb fdcge agebfd fecdb fabcd edb | fdgacbe cefdb cefbgd gcbe
+edbfga begcd cbg gc gcadebf fbgde acbgfd abcde gfcbed gfec | fcgedb cgb dgebacf gc
+fgaebd cg bdaec gdafb agbcfd gdcbef bgcad gfac gcb cdgabef | cg cg fdcagb cbg
+fbegcd cbd adcefb dageb afcb bc aefdc ecdab fgdeca fcdbega | efabcd cedba gadfec cb
+aecbfdg fbg gf bafeg dbefa fcge gcbea fcaegb dgceab fcbdga | gecf egdcabf bgf bfgea
+fgeab ca afcebg bdacfeg cfaedg gcfdb baec bfadeg bafgc acf | gebdcfa ecba ca fadegcb
+dbcfg fgd bdegcaf fgec aegbdf ecdfab fbedc dacgb gdcebf gf | cefg dcbef fcge gbcadfe
+bdfegc cbegaf gecbf dfcage bdacg ed bedf ced adcbefg gebcd | ed bcgafe cdgba cbgef
+egadfb cdbfeg cegd fecab cgb gbdefca cg fgcdab egfdb bfceg | gbdfcae bgc cg cgb
+gcafb gcf dcaebfg ecagb gf abcdeg gaef cafbge fdbac fegbdc | fgae cfgab fg bagce";
+
+        let input = load_input(input);
+
+        assert_eq!(part_two(&input), 61229);
+    }
 }
-
-
-// acedgfb  /       (8, abcdefg / )
-// cdfbe    / ag    (5, abdfg / ce)
-// gcdfa    / be    (2, acdeg / bf)
-// fbcad    / eg    (3, acdfg / be)
-// dab      / cefg  (7, acf     / bdeg)
-// cefabd   / g
-// cdfgeb   / a     (6, abdefg  / c)
-// eafb     / cdg   (4, bcdf    / ag)
-// cagedb   / f
-// ab       / cdefg (1, cf      / abdeg)
-//
-//      a   b   c   d   e   f   g
-//  a | x | x | O | x | x | x | x |
-//  b | x | x | x | x | x | O | x |
-//  c | x | x | x | x | x | x | O |
-//  d | O | x | x | x | x | x | x |
-//  e | x | O | x | x | x | x | x |
-//  f | x | x | x | O | x | x | x |
-//  g | x | x | x | x | O | x | x |
-//
-//
-// for each known number (signal -> display)
-// - for every signal, mark non-display
-// - for every display, mark non-signal
-// - find 6 - only len 6 that omits val in 7 that's not in 1
-// - find 2 - only len 5 that omits f (known)
-// - find 5 - only len 5 that has b (known)
-// - find 3 - only other len 5
-// - everything should be marked
-//
-//
-//
-//
-//
-//
-//
-//
-//
-//
-// 
