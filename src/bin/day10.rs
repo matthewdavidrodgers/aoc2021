@@ -169,4 +169,12 @@ mod tests {
 
         assert_eq!(part_two(&input), 288957);
     }
+
+    #[test]
+    fn test_part_two() {
+        let input = include_str!("day10.txt");
+        let input = load_input(input);
+
+        assert_eq!(part_two(&input), 2360030859u64);
+    }
 }
