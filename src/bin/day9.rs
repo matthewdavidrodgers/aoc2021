@@ -3,8 +3,7 @@ fn load_input(input: &str) -> Vec<Vec<u32>> {
         .lines()
         .filter(|line| !line.is_empty())
         .map(|line| {
-            line
-                .chars()
+            line.chars()
                 .map(|c| c.to_digit(10).unwrap())
                 .collect::<Vec<_>>()
         })
@@ -17,16 +16,16 @@ fn part_one(heights: &Vec<Vec<u32>>) -> u32 {
     for i in 0..heights.len() {
         for j in 0..heights[i].len() {
             let height = heights[i][j];
-            if i > 0 && heights[i-1][j] <= height {
+            if i > 0 && heights[i - 1][j] <= height {
                 continue;
             }
-            if i < heights.len() - 1 && heights[i+1][j] <= height {
+            if i < heights.len() - 1 && heights[i + 1][j] <= height {
                 continue;
             }
-            if j > 0 && heights[i][j-1] <= height {
+            if j > 0 && heights[i][j - 1] <= height {
                 continue;
             }
-            if j < heights[i].len() - 1 && heights[i][j+1] <= height {
+            if j < heights[i].len() - 1 && heights[i][j + 1] <= height {
                 continue;
             }
 
@@ -43,21 +42,23 @@ struct Basin {
 
 impl Basin {
     fn new() -> Basin {
-        Basin { positions: Vec::new() }
+        Basin {
+            positions: Vec::new(),
+        }
     }
 
     fn pos_is_adjacent(&self, (i, j): (usize, usize)) -> bool {
         for (b_i, b_j) in &self.positions {
-            if i == *b_i && j+1 == *b_j {
+            if i == *b_i && j + 1 == *b_j {
                 return true;
             }
-            if i == *b_i && j > 0 && j-1 == *b_j {
+            if i == *b_i && j > 0 && j - 1 == *b_j {
                 return true;
             }
-            if i+1 == *b_i && j == *b_j {
+            if i + 1 == *b_i && j == *b_j {
                 return true;
             }
-            if i > 0 && i-1 == *b_i && j == *b_j {
+            if i > 0 && i - 1 == *b_i && j == *b_j {
                 return true;
             }
         }
@@ -77,7 +78,7 @@ impl Basin {
 }
 
 fn part_two(heights: &Vec<Vec<u32>>) -> u32 {
-    let mut non_nine_positions = Vec::new();   
+    let mut non_nine_positions = Vec::new();
 
     for i in 0..heights.len() {
         for j in 0..heights[i].len() {
@@ -102,7 +103,7 @@ fn part_two(heights: &Vec<Vec<u32>>) -> u32 {
 
         let mut merged_basin = match matching_basins.len() {
             0 => Basin::new(),
-            _ => Basin::merge(matching_basins)
+            _ => Basin::merge(matching_basins),
         };
         merged_basin.positions.push((*i, *j));
 
@@ -111,10 +112,15 @@ fn part_two(heights: &Vec<Vec<u32>>) -> u32 {
         basins = remaining_basins;
     }
 
-    let mut basin_sizes: Vec<_> = basins.into_iter().map(|basin| basin.positions.len()).collect();
+    let mut basin_sizes: Vec<_> = basins
+        .into_iter()
+        .map(|basin| basin.positions.len())
+        .collect();
     basin_sizes.sort();
 
-    basin_sizes[basin_sizes.len() - 1] as u32 * basin_sizes[basin_sizes.len() - 2] as u32 * basin_sizes[basin_sizes.len() - 3] as u32
+    basin_sizes[basin_sizes.len() - 1] as u32
+        * basin_sizes[basin_sizes.len() - 2] as u32
+        * basin_sizes[basin_sizes.len() - 3] as u32
 }
 
 fn main() {
@@ -128,15 +134,14 @@ fn main() {
     println!("PART TWO ANSWER: {}", part_two_answer);
 }
 
-
 #[cfg(test)]
 mod tests {
     use super::*;
 
     #[test]
     fn test_part_one_sample() {
-        let input =
-"2199943210
+        let input = "
+2199943210
 3987894921
 9856789892
 8767896789
@@ -156,8 +161,8 @@ mod tests {
 
     #[test]
     fn test_part_two_sample() {
-        let input =
-"2199943210
+        let input = "
+2199943210
 3987894921
 9856789892
 8767896789
