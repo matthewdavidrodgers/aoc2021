@@ -92,13 +92,26 @@ fn part_one(mut octopi: [u32; 100], steps: u32) -> u32 {
     flashes
 }
 
+fn part_two(mut octopi: [u32; 100]) -> u32 {
+    let mut step = 1;
+
+    loop {
+        if perform_step(&mut octopi) == 100 {
+            return step;
+        }
+        step += 1;
+    }
+}
+
 fn main() {
     let input = include_str!("day11.txt");
     let input = load_input(input);
 
     let part_one_answer = part_one(input.clone(), 100);
+    let part_two_answer = part_two(input.clone());
 
     println!("PART ONE ANSWER: {}", part_one_answer);
+    println!("PART TWO ANSWER: {}", part_two_answer);
 }
 
 #[cfg(test)]
@@ -134,5 +147,30 @@ mod tests {
         let input = load_input(input);
 
         assert_eq!(part_one(input, 100), 1679);
+    }
+
+    #[test]
+    fn test_part_two_sample() {
+        let input = "5483143223
+2745854711
+5264556173
+6141336146
+6357385478
+4167524645
+2176841721
+6882881134
+4846848554
+5283751526";
+        let input = load_input(input);
+
+        assert_eq!(part_two(input.clone()), 195);
+    }
+
+    #[test]
+    fn test_part_two() {
+        let input = include_str!("day11.txt");
+        let input = load_input(input);
+
+        assert_eq!(part_two(input), 519);
     }
 }
