@@ -20,13 +20,13 @@ impl Cave {
             revisitable: match name {
                 "start" | "end" => Revisitable::Never,
                 other => {
-                    if other.chars().all(|c| c.is_uppercase()) { 
+                    if other.chars().all(|c| c.is_uppercase()) {
                         Revisitable::Always
                     } else {
                         Revisitable::Once
                     }
-                },
-            }
+                }
+            },
         }
     }
 }
@@ -46,7 +46,9 @@ impl CaveSystem {
             return vec![prev_visited];
         }
 
-        self.paths_map.get(&self.caves[curr_cave].name).unwrap()
+        self.paths_map
+            .get(&self.caves[curr_cave].name)
+            .unwrap()
             .iter()
             .filter(|cave_index| {
                 let cave_is_revisitable = match self.caves[**cave_index].revisitable {
@@ -64,25 +66,35 @@ impl CaveSystem {
             .collect()
     }
 
-    fn take_path_with_single_revisit(&self, curr_cave: usize, mut prev_visited: Vec<usize>) -> Vec<Vec<usize>> {
+    fn take_path_with_single_revisit(
+        &self,
+        curr_cave: usize,
+        mut prev_visited: Vec<usize>,
+    ) -> Vec<Vec<usize>> {
         if curr_cave == self.end_index {
             prev_visited.push(curr_cave);
             return vec![prev_visited];
         }
 
-        let have_double_visited = self.caves.iter()
+        let have_double_visited = self
+            .caves
+            .iter()
             .enumerate()
             .filter(|(_, cave)| match cave.revisitable {
                 Revisitable::Once => true,
                 _ => false,
             })
-            .any(|(index, _)| match prev_visited.iter().filter(|i| **i == index).count() {
-                0 => false,
-                1 if curr_cave != index => false,
-                _ => true
-            });
+            .any(
+                |(index, _)| match prev_visited.iter().filter(|i| **i == index).count() {
+                    0 => false,
+                    1 if curr_cave != index => false,
+                    _ => true,
+                },
+            );
 
-        self.paths_map.get(&self.caves[curr_cave].name).unwrap()
+        self.paths_map
+            .get(&self.caves[curr_cave].name)
+            .unwrap()
             .iter()
             .filter(|cave_index| {
                 let cave_is_revisitable = match self.caves[**cave_index].revisitable {
@@ -104,7 +116,8 @@ impl CaveSystem {
 
 fn load_input(input: &str) -> CaveSystem {
     let mut uniq_caves: Vec<Cave> = Vec::new();
-    let pairs: Vec<_> = input.lines()
+    let pairs: Vec<_> = input
+        .lines()
         .filter(|line| !line.is_empty())
         .map(|line| {
             let split: Vec<_> = line.split('-').collect();
@@ -128,8 +141,14 @@ fn load_input(input: &str) -> CaveSystem {
     let mut paths_map = HashMap::new();
 
     for (cave_a, cave_b) in pairs {
-        let cave_a_pos = uniq_caves.iter().position(|c| c.name == cave_a.name).unwrap();
-        let cave_b_pos = uniq_caves.iter().position(|c| c.name == cave_b.name).unwrap();
+        let cave_a_pos = uniq_caves
+            .iter()
+            .position(|c| c.name == cave_a.name)
+            .unwrap();
+        let cave_b_pos = uniq_caves
+            .iter()
+            .position(|c| c.name == cave_b.name)
+            .unwrap();
 
         let cave_a_entry = paths_map.entry(cave_a.name).or_insert(Vec::new());
         cave_a_entry.push(cave_b_pos);
@@ -138,16 +157,28 @@ fn load_input(input: &str) -> CaveSystem {
         cave_b_entry.push(cave_a_pos);
     }
 
-    let start_index = uniq_caves.iter().position(|cave| cave.name == "start").unwrap();
-    let end_index = uniq_caves.iter().position(|cave| cave.name == "end").unwrap();
+    let start_index = uniq_caves
+        .iter()
+        .position(|cave| cave.name == "start")
+        .unwrap();
+    let end_index = uniq_caves
+        .iter()
+        .position(|cave| cave.name == "end")
+        .unwrap();
 
-    CaveSystem { caves: uniq_caves, start_index, end_index, paths_map }
+    CaveSystem {
+        caves: uniq_caves,
+        start_index,
+        end_index,
+        paths_map,
+    }
 }
 
 fn part_one(cave_sys: &CaveSystem) -> u32 {
     let paths = cave_sys.take_path(cave_sys.start_index, vec![]);
 
-    paths.iter()
+    paths
+        .iter()
         .filter(|path| path.len() > 0 && path[path.len() - 1] == cave_sys.end_index)
         .count() as _
 }
@@ -155,7 +186,8 @@ fn part_one(cave_sys: &CaveSystem) -> u32 {
 fn part_two(cave_sys: &CaveSystem) -> u32 {
     let paths = cave_sys.take_path_with_single_revisit(cave_sys.start_index, vec![]);
 
-    paths.iter()
+    paths
+        .iter()
         .filter(|path| path.len() > 0 && path[path.len() - 1] == cave_sys.end_index)
         .count() as _
 }
