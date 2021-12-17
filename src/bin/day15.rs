@@ -11,16 +11,28 @@ impl Grid {
         let mut positions = vec![];
 
         if pos.x < self.x_len - 1 {
-            positions.push(Pos { x: pos.x + 1, y: pos.y });
+            positions.push(Pos {
+                x: pos.x + 1,
+                y: pos.y,
+            });
         }
         if pos.x > 0 {
-            positions.push(Pos { x: pos.x - 1, y: pos.y });
+            positions.push(Pos {
+                x: pos.x - 1,
+                y: pos.y,
+            });
         }
         if pos.y < self.y_len - 1 {
-            positions.push(Pos { x: pos.x, y: pos.y + 1 });
+            positions.push(Pos {
+                x: pos.x,
+                y: pos.y + 1,
+            });
         }
         if pos.y > 0 {
-            positions.push(Pos { x: pos.x, y: pos.y - 1 });
+            positions.push(Pos {
+                x: pos.x,
+                y: pos.y - 1,
+            });
         }
 
         positions
@@ -74,7 +86,12 @@ struct Move {
     cost: u32,
 }
 
-fn chose_path_with_lookahead(grid: &Grid, curr_pos: Pos, target_pos: Pos, lookahead: usize) -> Option<Move> {
+fn chose_path_with_lookahead(
+    grid: &Grid,
+    curr_pos: Pos,
+    target_pos: Pos,
+    lookahead: usize,
+) -> Option<Move> {
     if curr_pos == target_pos {
         return None;
     }
@@ -86,10 +103,7 @@ fn chose_path_with_lookahead(grid: &Grid, curr_pos: Pos, target_pos: Pos, lookah
 
     let mut cheapest_path: Option<(&Vec<Pos>, u32)> = None;
     for path in &peeking_paths {
-        let sum = path
-            .iter()
-            .map(|pos| grid.positions[pos.y][pos.x])
-            .sum();
+        let sum = path.iter().map(|pos| grid.positions[pos.y][pos.x]).sum();
 
         if let Some((_, min_sum)) = cheapest_path {
             if min_sum > sum {
@@ -101,9 +115,12 @@ fn chose_path_with_lookahead(grid: &Grid, curr_pos: Pos, target_pos: Pos, lookah
     }
 
     let (path, _) = cheapest_path.unwrap();
-    let move_pos = path[0]; 
+    let move_pos = path[0];
 
-    Some(Move { to: move_pos, cost: grid.positions[move_pos.y][move_pos.x] })
+    Some(Move {
+        to: move_pos,
+        cost: grid.positions[move_pos.y][move_pos.x],
+    })
 }
 
 fn _part_one(grid: &Grid) -> u32 {
@@ -119,15 +136,17 @@ fn _part_one(grid: &Grid) -> u32 {
 }
 
 fn part_one(grid: &Grid) -> u32 {
-
     let mut min_cost: Option<u32> = None;
 
-    let mut taken_positions = vec![]; 
+    let mut taken_positions = vec![];
     for lookahead in 3..9 {
         let mut cost = 0;
 
         let mut pos = Pos { x: 0, y: 0 };
-        let target = Pos { x: grid.x_len - 1, y: grid.y_len - 1 };
+        let target = Pos {
+            x: grid.x_len - 1,
+            y: grid.y_len - 1,
+        };
 
         while let Some(pos_move) = chose_path_with_lookahead(grid, pos, target, lookahead) {
             println!("TOOK PATH: {:?}", pos_move.to);
@@ -157,7 +176,6 @@ fn part_one(grid: &Grid) -> u32 {
         print!("\n");
     }
 
-
     min_cost.unwrap()
 }
 
@@ -166,8 +184,7 @@ fn load_input(input: &str) -> Grid {
         .lines()
         .filter(|line| !line.is_empty())
         .map(|line| {
-            line
-                .chars()
+            line.chars()
                 .map(|c| c.to_digit(10).unwrap())
                 .collect::<Vec<_>>()
         })
@@ -176,9 +193,12 @@ fn load_input(input: &str) -> Grid {
     let x_len = positions[0].len();
     let y_len = positions.len();
 
-    Grid { positions, x_len, y_len }
+    Grid {
+        positions,
+        x_len,
+        y_len,
+    }
 }
-
 
 fn main() {
     let input = include_str!("day15.txt");
@@ -195,8 +215,7 @@ mod tests {
 
     #[test]
     fn test_part_one_sample() {
-        let input = 
-"1163751742
+        let input = "1163751742
 1381373672
 2136511328
 3694931569

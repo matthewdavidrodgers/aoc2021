@@ -1,6 +1,6 @@
 use std::collections::HashMap;
-use std::thread;
 use std::sync::mpsc::channel;
+use std::thread;
 
 type Rule = ((char, char), char);
 
@@ -55,16 +55,17 @@ fn perform_step(template: Vec<char>, rules: &Vec<Rule>) -> Vec<char> {
     let pairing_iter = PairingCharVec::new(&template);
 
     let mut mapped: Vec<_> = pairing_iter
-        .flat_map(|(a, b)| {
-            match rules.iter().find(|((r_a, r_b), _)| *r_a == a && *r_b == b) {
+        .flat_map(
+            |(a, b)| match rules.iter().find(|((r_a, r_b), _)| *r_a == a && *r_b == b) {
                 Some(((_, _), prod)) => {
                     vec![a, *prod]
-                },
+                }
                 None => {
                     vec![a]
                 }
-            }
-        }).collect();
+            },
+        )
+        .collect();
 
     mapped.push(template[template.len() - 1]);
 
@@ -77,7 +78,7 @@ fn part_one(template: &Vec<char>, rules: &Vec<Rule>, steps: usize) -> usize {
     for step in 0..steps {
         polymer = perform_step(polymer, rules);
     }
-    
+
     let mut counts = HashMap::new();
     for c in &polymer {
         let c_count = counts.entry(c).or_insert(0);
@@ -118,7 +119,7 @@ fn build_productions_to(rules: &Vec<Rule>, steps: usize) -> Vec<MemoedRule> {
     rules
         .iter()
         .map(|rule| {
-            let mut produces = vec![rule.0.0, rule.0.1];
+            let mut produces = vec![rule.0 .0, rule.0 .1];
             for i in 0..steps {
                 produces = perform_step(produces, rules);
             }
@@ -130,7 +131,12 @@ fn build_productions_to(rules: &Vec<Rule>, steps: usize) -> Vec<MemoedRule> {
 
             println!("produced for rule {:?}", rule);
 
-            MemoedRule { rule: *rule, after_steps: steps, produces, counts }
+            MemoedRule {
+                rule: *rule,
+                after_steps: steps,
+                produces,
+                counts,
+            }
         })
         .collect()
 }
@@ -156,8 +162,7 @@ mod tests {
 
     #[test]
     fn test_part_one_sample() {
-        let input = 
-"NNCB
+        let input = "NNCB
 
 CH -> B
 HH -> N
@@ -190,8 +195,7 @@ CN -> C";
 
     #[test]
     fn blah() {
-        let input = 
-"NNCB
+        let input = "NNCB
 
 CH -> B
 HH -> N
@@ -213,8 +217,14 @@ CN -> C";
 
         let memoed_rules = build_productions_to(&rules, 20);
         for r in memoed_rules {
-            println!("{:?} | N: {}\tB: {}\tC: {}\tH: {}", r.rule, r.counts.get(&'N').unwrap_or(&0), r.counts.get(&'B').unwrap_or(&0), r.counts.get(&'C').unwrap_or(&0), r.counts.get(&'H').unwrap_or(&0));
+            println!(
+                "{:?} | N: {}\tB: {}\tC: {}\tH: {}",
+                r.rule,
+                r.counts.get(&'N').unwrap_or(&0),
+                r.counts.get(&'B').unwrap_or(&0),
+                r.counts.get(&'C').unwrap_or(&0),
+                r.counts.get(&'H').unwrap_or(&0)
+            );
         }
     }
 }
-
